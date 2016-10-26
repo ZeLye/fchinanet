@@ -346,7 +346,8 @@ func kickOffDevice(ip, brasIp string) {
 }
 
 func getPasswd() string {
-	request, errNewRequest := http.NewRequest("GET", "https://www.loocha.com.cn/"+id+"/wifi?server_did="+serverId, nil)
+	fmt.Println("https://www.loocha.com.cn/" + id + "/wifi?server_did=" + serverId + "&wanip=" + wanIp)
+	request, errNewRequest := http.NewRequest("GET", "https://wifi.loocha.cn/"+id+"/wifi?server_did="+serverId, nil)
 	checkErr(errNewRequest, "error new request")
 	request.SetBasicAuth(account, passwd)
 	response, errRequest := newClient().Do(request)
