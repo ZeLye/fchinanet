@@ -259,8 +259,14 @@ func initial() {
 		content := rep.Header.Get("Location")
 		argString := strings.Split(content, "?")
 		args := strings.SplitN(argString[1], "&", -1)
-		wanIp = strings.Split(args[0], "=")[1]
-		brasIp = strings.Split(args[1], "=")[1]
+		for _, param := range args {
+			if strings.Contains(param, "wlanuserip") {
+				wanIp = strings.Split(param, "=")[1]
+			}
+			if strings.Contains(param, "mscgip") {
+				brasIp = strings.Split(param, "=")[1]
+			}
+		}
 	}
 }
 
