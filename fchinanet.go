@@ -20,6 +20,7 @@ import (
 type user struct {
 	Account  string `xml:"account"`
 	Passwd   string `xml:"passwd"`
+	Type     string `xml:"type"`
 	Id       string `xml:"id"`
 	ServerId string `xml:"serverId"`
 	Status   int    `xml:"status"`
@@ -95,12 +96,12 @@ type OnlineResult struct {
 	Response string `json:"response"`
 }
 type XMLKey struct {
-	Account, Passwd, Id, ServerId, Status, LastIp, BrasIp string
+	Account, Passwd, Type, Id, ServerId, Status, LastIp, BrasIp string
 }
 
 const divider = "##############################################"
 
-var XMLKeyWord = XMLKey{"account", "passwd", "id", "serverId", "status", "lastIp", "brasIp"}
+var XMLKeyWord = XMLKey{"account", "passwd", "type", "id", "serverId", "status", "lastIp", "brasIp"}
 
 var (
 	deviceStatus = [...]bool{false, false, false, false}
@@ -108,6 +109,7 @@ var (
 	serverId     string
 	account      = ""
 	passwd       = ""
+	ttype        = "1"
 	client       *http.Client
 	re           string
 	brasIp       string
@@ -115,7 +117,7 @@ var (
 )
 
 func saveUser() {
-	u := &user{base64.StdEncoding.EncodeToString([]byte(account)), base64.StdEncoding.EncodeToString([]byte(passwd)), id, serverId, 0, "0", "0"}
+	u := &user{base64.StdEncoding.EncodeToString([]byte(account)), base64.StdEncoding.EncodeToString([]byte(passwd)), ttype, id, serverId, 0, "0", "0"}
 	body, errMarshal := xml.MarshalIndent(u, "", "	")
 	checkErr(errMarshal, "error marshal xml")
 
@@ -217,6 +219,9 @@ func checkEncry() bool {
 	user := getUser()
 	account = user.Account
 	passwd = user.Passwd
+	if user.Type != "" {
+		ttype = user.Type
+	}
 	if account == "" || passwd == "" {
 		return false
 	}
@@ -426,10 +431,10 @@ func online() string {
 		return "0"
 	}
 	fmt.Println("正在登陆...")
-	code := getPasswd()
-	if code == "" {
-		return "密码获取错误请在掌上大学重新获取密码后尝试"
-	}
+	// code := getPasswd()
+	// if code == "" {
+	// 	return "密码获取错误请在掌上大学重新获取密码后尝试"
+	// }
 	// history := [...]int{-1, -1}
 	// for i := 0; i < 3; i++ {
 	// 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -446,31 +451,32 @@ func online() string {
 	if qrcode == "" {
 		return "code获取异常"
 	}
-	param := "qrcode=" + qrcode + "&code=" + code + "&type="
-	param += "1"
-	request, errNewRequest := http.NewRequest("POST", "https://wifi.loocha.cn/"+id+"/wifi/telecom/auto/login?"+param, nil)
-	checkErr(errNewRequest, "error new request")
-	request.SetBasicAuth(account, passwd)
-	response, errRequest := newClient().Do(request)
-	checkErr(errRequest, "error requseting")
-	if response.StatusCode == http.StatusOK {
-		defer response.Body.Close()
-		body, errRead := ioutil.ReadAll(response.Body)
-		checkErr(errRead, "error reading")
-		onlineResult := &OnlineResult{}
-		errUnmarshal := json.Unmarshal(body, onlineResult)
-		checkErr(errUnmarshal, "Error Unmarshal")
-		status := onlineResult.Status
-		if status == "0" {
-			return "0"
-		} else {
-			r := onlineResult.Response
-			if r == "检测到你的帐号在其他设备登录" {
-				// continue
-			}
-			return r
-		}
-	}
+	print(qrcode)
+	// param := "qrcode=" + qrcode + "&code=" + code + "&type="
+	// param += ttype
+	// request, errNewRequest := http.NewRequest("POST", "https://wifi.loocha.cn/"+id+"/wifi/telecom/auto/login?"+param, nil)
+	// checkErr(errNewRequest, "error new request")
+	// request.SetBasicAuth(account, passwd)
+	// response, errRequest := newClient().Do(request)
+	// checkErr(errRequest, "error requseting")
+	// if response.StatusCode == http.StatusOK {
+	// 	defer response.Body.Close()
+	// 	body, errRead := ioutil.ReadAll(response.Body)
+	// 	checkErr(errRead, "error reading")
+	// 	onlineResult := &OnlineResult{}
+	// 	errUnmarshal := json.Unmarshal(body, onlineResult)
+	// 	checkErr(errUnmarshal, "Error Unmarshal")
+	// 	status := onlineResult.Status
+	// 	if status == "0" {
+	// 		return "0"
+	// 	} else {
+	// 		r := onlineResult.Response
+	// 		if r == "检测到你的帐号在其他设备登录" {
+	// 			// continue
+	// 		}
+	// 		return r
+	// 	}
+	// }
 	return "拨号异常"
 
 }
